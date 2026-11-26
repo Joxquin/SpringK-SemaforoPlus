@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   FileText,
   Settings,
-  Sparkles,
 } from 'lucide-react'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { api } from '@/services/api'
@@ -16,6 +15,7 @@ import { DashboardPage } from '@/pages/DashboardPage'
 import { InterseccionPage } from '@/pages/InterseccionPage'
 import { CamarasPage } from '@/pages/CamarasPage'
 import { AnalisisPage } from '@/pages/AnalisisPage'
+import { PrediccionesPage } from '@/pages/PrediccionesPage'
 
 function ProtectedAdmin({ user, checking, onLogout }) {
   if (checking) {
@@ -64,16 +64,7 @@ export default function App() {
             <Route path="interseccion" element={<InterseccionPage />} />
             <Route path="camaras" element={<CamarasPage />} />
             <Route path="analisis" element={<AnalisisPage />} />
-            <Route
-              path="predicciones"
-              element={
-                <SectionShell
-                  title="Predicciones"
-                  subtitle="Proyección de congestión a 15, 30 y 60 minutos basada en mediciones reales."
-                  icon={Sparkles}
-                />
-              }
-            />
+            <Route path="predicciones" element={<PrediccionesPage />} />
             <Route
               path="incidencias"
               element={

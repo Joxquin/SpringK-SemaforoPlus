@@ -5,7 +5,6 @@ import {
   BarChart3,
   Camera,
   FileText,
-  GitFork,
   Settings,
   Sparkles,
 } from 'lucide-react'
@@ -16,6 +15,7 @@ import { SectionShell } from '@/components/layout/SectionShell'
 import { PublicPortalPage } from '@/pages/PublicPortalPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
+import { InterseccionPage } from '@/pages/InterseccionPage'
 
 function ProtectedAdmin({ user, checking, onLogout }) {
   if (checking) {
@@ -61,16 +61,7 @@ export default function App() {
           >
             <Route index element={<DashboardPage />} />
             <Route path="dashboard" element={<DashboardPage />} />
-            <Route
-              path="interseccion"
-              element={
-                <SectionShell
-                  title="Intersección Vial"
-                  subtitle="Esquema en vivo de carriles, fases y límites de seguridad de INT-01."
-                  icon={GitFork}
-                />
-              }
-            />
+            <Route path="interseccion" element={<InterseccionPage />} />
             <Route
               path="camaras"
               element={

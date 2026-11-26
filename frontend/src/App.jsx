@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import {
-  AlertTriangle,
   FileText,
   Settings,
 } from 'lucide-react'
@@ -16,6 +15,7 @@ import { InterseccionPage } from '@/pages/InterseccionPage'
 import { CamarasPage } from '@/pages/CamarasPage'
 import { AnalisisPage } from '@/pages/AnalisisPage'
 import { PrediccionesPage } from '@/pages/PrediccionesPage'
+import { IncidenciasPage } from '@/pages/IncidenciasPage'
 
 function ProtectedAdmin({ user, checking, onLogout }) {
   if (checking) {
@@ -65,16 +65,7 @@ export default function App() {
             <Route path="camaras" element={<CamarasPage />} />
             <Route path="analisis" element={<AnalisisPage />} />
             <Route path="predicciones" element={<PrediccionesPage />} />
-            <Route
-              path="incidencias"
-              element={
-                <SectionShell
-                  title="Gestión de Incidencias"
-                  subtitle="Registro y seguimiento de alertas viales y emergencias."
-                  icon={AlertTriangle}
-                />
-              }
-            />
+            <Route path="incidencias" element={<IncidenciasPage />} />
             <Route
               path="reportes"
               element={

@@ -51,6 +51,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  updateIncidentStatus: (id, status) =>
+    request(`/incidents/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
   getMeasurements: (limit = 20) => request(`/traffic/measurements?limit=${limit}`),
   getCycles: (limit = 20) => request(`/traffic/cycles?limit=${limit}`),
   getAnalytics: (camId = 'ALL', limit = 100) =>

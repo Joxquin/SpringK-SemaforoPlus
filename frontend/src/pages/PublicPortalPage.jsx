@@ -40,31 +40,32 @@ export function PublicPortalPage() {
 
   return (
     <div className="min-h-screen bg-[var(--surface)] text-[var(--on-surface)] flex flex-col">
-      <header className="sticky top-0 z-40 h-20 bg-[var(--surface)]/90 backdrop-blur-md border-b border-[var(--outline-variant)]/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-[var(--primary-container)] text-[var(--primary)] flex items-center justify-center shadow-inner">
-              <TrafficCone className="w-6 h-6" />
+      <header className="sticky top-0 z-40 h-16 sm:h-20 bg-[var(--surface)]/90 backdrop-blur-md border-b border-[var(--outline-variant)]/40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-full flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 shrink min-w-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[var(--primary-container)] text-[var(--primary)] flex items-center justify-center shadow-inner shrink-0">
+              <TrafficCone className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <span className="font-serif font-bold text-xl tracking-tight block leading-none">
+            <div className="min-w-0">
+              <span className="font-serif font-bold text-lg sm:text-xl tracking-tight block leading-none truncate">
                 Semáforo+
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--on-surface-variant)]">
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[var(--on-surface-variant)] block truncate">
                 Arequipa · Portal Ciudadano
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="hidden sm:inline-flex">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <Badge variant="secondary" className="hidden md:inline-flex">
               {clock}
             </Badge>
             <ThemeToggle />
             <Link to="/admin">
-              <Button variant="filled" size="sm">
+              <Button variant="filled" size="sm" className="h-9 px-3 sm:px-4 text-xs">
                 <Lock className="w-3.5 h-3.5" />
-                Administración
+                <span className="hidden sm:inline">Administración</span>
+                <span className="sm:hidden">Admin</span>
               </Button>
             </Link>
           </div>

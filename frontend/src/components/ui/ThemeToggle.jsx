@@ -12,7 +12,7 @@ export function ThemeToggle() {
   ]
 
   return (
-    <div className="inline-flex items-center rounded-full bg-[var(--surface-container-high)] p-1 border border-[var(--outline-variant)]/50">
+    <div className="inline-flex items-center rounded-full bg-[var(--surface-container-high)] p-0.5 sm:p-1 border border-[var(--outline-variant)]/50 shrink-0">
       {options.map((opt) => {
         const Icon = opt.icon
         const active = themeMode === opt.id
@@ -23,7 +23,7 @@ export function ThemeToggle() {
             onClick={() => setThemeMode(opt.id)}
             title={opt.label}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200 cursor-pointer',
+              'inline-flex items-center justify-center gap-1.5 rounded-full p-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold transition-all duration-200 cursor-pointer',
               active
                 ? 'bg-[var(--primary)] text-[var(--on-primary)] shadow-sm'
                 : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'

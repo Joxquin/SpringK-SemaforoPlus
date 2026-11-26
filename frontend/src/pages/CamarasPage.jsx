@@ -191,8 +191,8 @@ export function CamarasPage() {
             peatones: 0,
             unidadesEmergencia: 0,
           }
-          const totalVeh = cls.autos + cls.combis + cls.motos
-          const weighted = (cls.autos * 1.0 + cls.combis * 2.2 + cls.motos * 0.5).toFixed(1)
+          const totalVeh = cls.autos + cls.combis
+          const weighted = (cls.autos * 1.0 + cls.combis * 2.2).toFixed(1)
 
           return (
             <Card key={cam.id} interactive className="flex flex-col">
@@ -225,7 +225,7 @@ export function CamarasPage() {
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-5 gap-2 text-center">
+                <div className="grid grid-cols-3 gap-2.5 text-center">
                   <div className="rounded-2xl bg-[var(--surface-container-low)] p-2.5">
                     <Car className="w-4 h-4 mx-auto text-[var(--primary)]" />
                     <p className="text-sm font-extrabold mt-1">{online ? cls.autos : '--'}</p>
@@ -235,16 +235,6 @@ export function CamarasPage() {
                     <Bus className="w-4 h-4 mx-auto text-[var(--secondary)]" />
                     <p className="text-sm font-extrabold mt-1">{online ? cls.combis : '--'}</p>
                     <p className="text-[10px] text-[var(--on-surface-variant)]">Combis</p>
-                  </div>
-                  <div className="rounded-2xl bg-[var(--surface-container-low)] p-2.5">
-                    <Bike className="w-4 h-4 mx-auto text-[var(--tertiary)]" />
-                    <p className="text-sm font-extrabold mt-1">{online ? cls.motos : '--'}</p>
-                    <p className="text-[10px] text-[var(--on-surface-variant)]">Motos</p>
-                  </div>
-                  <div className="rounded-2xl bg-[var(--surface-container-low)] p-2.5">
-                    <Users className="w-4 h-4 mx-auto text-[var(--on-surface-variant)]" />
-                    <p className="text-sm font-extrabold mt-1">{online ? cls.peatones : '--'}</p>
-                    <p className="text-[10px] text-[var(--on-surface-variant)]">Peatones</p>
                   </div>
                   <div className="rounded-2xl bg-[var(--error-container)]/50 p-2.5">
                     <Siren className="w-4 h-4 mx-auto text-[var(--error)]" />
@@ -291,8 +281,6 @@ export function CamarasPage() {
                   <th className="py-2 pr-3">Cámara</th>
                   <th className="py-2 pr-3">Autos</th>
                   <th className="py-2 pr-3">Combis</th>
-                  <th className="py-2 pr-3">Motos</th>
-                  <th className="py-2 pr-3">Peatones</th>
                   <th className="py-2 pr-3">Emerg.</th>
                   <th className="py-2 pr-3">Latencia</th>
                   <th className="py-2">Hora</th>
@@ -304,8 +292,6 @@ export function CamarasPage() {
                     <td className="py-2.5 pr-3 font-semibold">{m.camId}</td>
                     <td className="py-2.5 pr-3">{m.autos}</td>
                     <td className="py-2.5 pr-3">{m.combis}</td>
-                    <td className="py-2.5 pr-3">{m.motos}</td>
-                    <td className="py-2.5 pr-3">{m.peatones}</td>
                     <td className="py-2.5 pr-3">{m.unidadesEmergencia}</td>
                     <td className="py-2.5 pr-3">{m.inferenceLatencyMs} ms</td>
                     <td className="py-2.5">{new Date(m.timestamp).toLocaleTimeString()}</td>

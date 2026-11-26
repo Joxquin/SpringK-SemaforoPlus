@@ -91,7 +91,7 @@ export function DashboardPage() {
 
   const totalVehicles = cameras.reduce((acc, c) => {
     if (!c.online || !c.classification) return acc
-    return acc + c.classification.autos + c.classification.combis + c.classification.motos
+    return acc + c.classification.autos + c.classification.combis
   }, 0)
 
   const activeCams = cameras.filter((c) => c.online)

@@ -23,9 +23,7 @@ function computeLanePrediction(camStats, liveCam, horizonMinutes) {
   }
   const avgLoad = camStats?.avgWeightedLoad || 0
   const liveVehicles = liveCam?.online
-    ? (liveCam.classification?.autos || 0) +
-      (liveCam.classification?.combis || 0) +
-      (liveCam.classification?.motos || 0)
+    ? (liveCam.classification?.autos || 0) + (liveCam.classification?.combis || 0)
     : 0
   const baseLoad = liveCam?.online ? Math.max(avgLoad, liveVehicles * 1.1) : avgLoad
   const horizonFactor = horizonMinutes === 15 ? 1.05 : horizonMinutes === 30 ? 1.15 : 1.25

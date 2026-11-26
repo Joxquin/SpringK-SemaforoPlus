@@ -21,7 +21,7 @@ CAMERAS = [
 ]
 
 MAQUETA_VEHICLE_PROXY_CLASSES = {28, 64, 65, 67}
-NATIVE_VEHICLE_CLASSES = {2, 3, 5, 6, 7}
+NATIVE_VEHICLE_CLASSES = {2, 5, 6, 7}
 
 latest_detections = {
     "CAM-01": {"autos": 0, "combis": 0, "motos": 0, "peatones": 0, "unidadesEmergencia": 0, "inferenceLatencyMs": 0, "fps": 0},
@@ -101,7 +101,7 @@ def process_camera(model, cam_id, avenue_label):
             cls_id = int(box.cls[0].item())
             conf = float(box.conf[0].item())
             xyxy = box.xyxy[0].tolist()
-            if cls_id in NATIVE_VEHICLE_CLASSES or cls_id == 0:
+            if cls_id in NATIVE_VEHICLE_CLASSES:
                 detections.append((xyxy, cls_id, conf, False))
             elif cls_id in MAQUETA_VEHICLE_PROXY_CLASSES and is_valid_maqueta_vehicle(img_rgb, xyxy):
                 detections.append((xyxy, 2, conf, True))
@@ -123,15 +123,7 @@ def process_camera(model, cam_id, avenue_label):
         label = ""
         color = (34, 197, 94)
 
-        if cls_id == 0:
-            peatones += 1
-            label = f"Peaton {conf:.2f}"
-            color = (56, 189, 248)
-        elif cls_id == 3:
-            motos += 1
-            label = f"Moto {conf:.2f}"
-            color = (250, 204, 21)
-        elif cls_id in {5, 6, 7}:
+        if cls_id in {5, 6, 7}:
             combis += 1
             label = f"Combi/Bus {conf:.2f}"
             color = (249, 115, 22)
@@ -158,7 +150,7 @@ def process_camera(model, cam_id, avenue_label):
     conf_avg = round(sum(confs) / len(confs), 3) if confs else 0.0
 
     cv2.rectangle(img_bgr, (0, 0), (img_bgr.shape[1], 24), (20, 20, 20), -1)
-    hud = f"{cam_id} | {avenue_label} | V:{autos + combis + motos} P:{peatones} | {latency_ms}ms"
+    hud = f"{cam_id} | {avenue_label} | V:{autos + combis} | {latency_ms}ms"
     cv2.putText(img_bgr, hud, (6, 16), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (255, 255, 255), 1)
 
     ok, encoded = cv2.imencode(".jpg", img_bgr, [cv2.IMWRITE_JPEG_QUALITY, 82])

@@ -116,14 +116,10 @@ export function InterseccionPage() {
   const cam2 = node?.cameras?.[1] || { id: 'CAM-02', online: false, classification: {} }
 
   const cam1Total = cam1.online
-    ? (cam1.classification?.autos || 0) +
-      (cam1.classification?.combis || 0) +
-      (cam1.classification?.motos || 0)
+    ? (cam1.classification?.autos || 0) + (cam1.classification?.combis || 0)
     : 0
   const cam2Total = cam2.online
-    ? (cam2.classification?.autos || 0) +
-      (cam2.classification?.combis || 0) +
-      (cam2.classification?.motos || 0)
+    ? (cam2.classification?.autos || 0) + (cam2.classification?.combis || 0)
     : 0
 
   const limits = node?.safetyLimits || {

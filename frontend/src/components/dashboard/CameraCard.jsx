@@ -73,7 +73,7 @@ export function CameraCard({ cam }) {
           )}
         </div>
 
-        <div className="grid grid-cols-5 gap-2 text-center">
+        <div className="grid grid-cols-3 gap-2.5 text-center">
           <div className="rounded-2xl bg-[var(--surface-container-low)] p-2.5">
             <Car className="w-4 h-4 mx-auto text-[var(--primary)]" />
             <p className="text-sm font-extrabold mt-1">{online ? cls.autos : '--'}</p>
@@ -83,16 +83,6 @@ export function CameraCard({ cam }) {
             <Bus className="w-4 h-4 mx-auto text-[var(--secondary)]" />
             <p className="text-sm font-extrabold mt-1">{online ? cls.combis : '--'}</p>
             <p className="text-[10px] text-[var(--on-surface-variant)]">Combis</p>
-          </div>
-          <div className="rounded-2xl bg-[var(--surface-container-low)] p-2.5">
-            <Bike className="w-4 h-4 mx-auto text-[var(--tertiary)]" />
-            <p className="text-sm font-extrabold mt-1">{online ? cls.motos : '--'}</p>
-            <p className="text-[10px] text-[var(--on-surface-variant)]">Motos</p>
-          </div>
-          <div className="rounded-2xl bg-[var(--surface-container-low)] p-2.5">
-            <Users className="w-4 h-4 mx-auto text-[var(--on-surface-variant)]" />
-            <p className="text-sm font-extrabold mt-1">{online ? cls.peatones : '--'}</p>
-            <p className="text-[10px] text-[var(--on-surface-variant)]">Peatones</p>
           </div>
           <div className="rounded-2xl bg-[var(--error-container)]/50 p-2.5">
             <Siren className="w-4 h-4 mx-auto text-[var(--error)]" />

@@ -62,18 +62,6 @@ export function AnalisisPage() {
       color: 'bg-[var(--secondary)]',
     },
     {
-      label: 'Motos',
-      value: analytics?.totalMotos || 0,
-      icon: Bike,
-      color: 'bg-[var(--tertiary)]',
-    },
-    {
-      label: 'Peatones',
-      value: analytics?.totalPeatones || 0,
-      icon: Users,
-      color: 'bg-sky-500',
-    },
-    {
       label: 'Emergencias',
       value: analytics?.totalEmergencias || 0,
       icon: Siren,

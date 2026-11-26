@@ -1,14 +1,25 @@
 const API_BASE = '/api/v1'
+const TOKEN_KEY = 'sp_jwt_token'
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY)
+}
 
 async function request(path, options = {}) {
+  const token = getToken()
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {}
+
   const res = await fetch(`${API_BASE}${path}`, {
-    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...(options.headers || {}),
     },
     ...options,
   })
+  if (res.status === 401) {
+    localStorage.removeItem(TOKEN_KEY)
+  }
   if (!res.ok) {
     const text = await res.text().catch(() => '')
     throw new Error(text || `HTTP ${res.status}`)
@@ -24,13 +35,21 @@ export const api = {
   getPublicOverview: () => request('/public/overview'),
   getPublicHourlyTrend: () => request('/public/hourly-trend'),
 
-  login: (username, password) =>
-    request('/auth/login', {
+  login: async (username, password) => {
+    const data = await request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
-    }),
+    })
+    if (data?.token) {
+      localStorage.setItem(TOKEN_KEY, data.token)
+    }
+    return data
+  },
   me: () => request('/auth/me'),
-  logout: () => request('/auth/logout', { method: 'POST' }),
+  logout: async () => {
+    localStorage.removeItem(TOKEN_KEY)
+    return request('/auth/logout', { method: 'POST' })
+  },
 
   getRealtimeNode: () => request('/realtime/node'),
   triggerEmergency: (camId = 'CAM-01') =>

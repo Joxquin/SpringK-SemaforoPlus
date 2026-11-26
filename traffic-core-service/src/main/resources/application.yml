@@ -17,3 +17,7 @@ spring:
 
 iot-gateway:
   url: ${IOT_GATEWAY_URL:http://localhost:8081}
+
+jwt:
+  secret: ${JWT_SECRET:SemaforoPlus2026ArequipaYanahuaraJwtSecretKey256BitsMinimum}
+  expiration-ms: 86400000

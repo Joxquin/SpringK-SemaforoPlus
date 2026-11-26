@@ -1,0 +1,19 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: traffic-core-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/semaforoplus}
+    username: ${SPRING_DATASOURCE_USERNAME:semaforo_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:semaforo_password_2026}
+    hikari:
+      maximum-pool-size: 20
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+iot-gateway:
+  url: ${IOT_GATEWAY_URL:http://localhost:8081}

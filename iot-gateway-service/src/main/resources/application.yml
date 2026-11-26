@@ -1,0 +1,19 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: iot-gateway-service
+
+mqtt:
+  broker-url: ${MQTT_BROKER_URL:tcp://localhost:1883}
+  client-id: semaforoplus-iot-gateway
+  topic-prefix: semaforoplus/node-01
+  username: ${MQTT_USERNAME:}
+  password: ${MQTT_PASSWORD:}
+
+udp:
+  video-port: 5005
+
+traffic-core:
+  url: ${TRAFFIC_CORE_URL:http://localhost:8082}

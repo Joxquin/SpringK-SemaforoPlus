@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import {
   AlertTriangle,
-  BarChart3,
   FileText,
   Settings,
   Sparkles,
@@ -16,6 +15,7 @@ import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { InterseccionPage } from '@/pages/InterseccionPage'
 import { CamarasPage } from '@/pages/CamarasPage'
+import { AnalisisPage } from '@/pages/AnalisisPage'
 
 function ProtectedAdmin({ user, checking, onLogout }) {
   if (checking) {
@@ -63,16 +63,7 @@ export default function App() {
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="interseccion" element={<InterseccionPage />} />
             <Route path="camaras" element={<CamarasPage />} />
-            <Route
-              path="analisis"
-              element={
-                <SectionShell
-                  title="Análisis de Tráfico"
-                  subtitle="Histórico de flujos, latencias y comparativa de tiempos de espera."
-                  icon={BarChart3}
-                />
-              }
-            />
+            <Route path="analisis" element={<AnalisisPage />} />
             <Route
               path="predicciones"
               element={

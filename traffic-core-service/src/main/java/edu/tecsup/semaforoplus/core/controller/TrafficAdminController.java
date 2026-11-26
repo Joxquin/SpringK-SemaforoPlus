@@ -55,8 +55,11 @@ public class TrafficAdminController {
     }
 
     @GetMapping("/traffic/analytics")
-    public ResponseEntity<Map<String, Object>> getAnalytics() {
-        return ResponseEntity.ok(trafficDataService.getAnalyticsSummary());
+    public ResponseEntity<Map<String, Object>> getAnalytics(
+            @RequestParam(defaultValue = "ALL") String camId,
+            @RequestParam(defaultValue = "100") int limit
+    ) {
+        return ResponseEntity.ok(trafficDataService.getAnalyticsSummary(camId, limit));
     }
 
     @GetMapping("/mode")

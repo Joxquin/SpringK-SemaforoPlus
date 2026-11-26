@@ -233,22 +233,82 @@ public class TrafficDataService {
         return cycleRepository.findByOrderByTimestampDesc(PageRequest.of(0, Math.min(limit, 100)));
     }
 
-    public Map<String, Object> getAnalyticsSummary() {
-        List<TrafficMeasurementEntity> recent = getRecentMeasurements(50);
+    public Map<String, Object> getAnalyticsSummary(String camId, int limit) {
+        int safeLimit = Math.max(10, Math.min(limit, 500));
+        List<TrafficMeasurementEntity> recent = (camId == null || "ALL".equalsIgnoreCase(camId))
+                ? measurementRepository.findByOrderByTimestampDesc(PageRequest.of(0, safeLimit))
+                : measurementRepository.findByCamIdOrderByTimestampDesc(camId, PageRequest.of(0, safeLimit));
+
         int totalAutos = recent.stream().mapToInt(TrafficMeasurementEntity::getAutos).sum();
         int totalCombis = recent.stream().mapToInt(TrafficMeasurementEntity::getCombis).sum();
         int totalMotos = recent.stream().mapToInt(TrafficMeasurementEntity::getMotos).sum();
         int totalPeatones = recent.stream().mapToInt(TrafficMeasurementEntity::getPeatones).sum();
-        double avgLatency = recent.stream().mapToInt(TrafficMeasurementEntity::getInferenceLatencyMs).average().orElse(0.0);
+        int totalEmergencias = recent.stream().mapToInt(TrafficMeasurementEntity::getUnidadesEmergencia).sum();
+        int totalVehicles = totalAutos + totalCombis + totalMotos;
 
+        double avgLatency = recent.stream().mapToInt(TrafficMeasurementEntity::getInferenceLatencyMs).average().orElse(0.0);
+        double avgConfidence = recent.stream().mapToDouble(TrafficMeasurementEntity::getConfidenceAvg).average().orElse(0.0);
+        double avgLoad = recent.stream().mapToDouble(TrafficMeasurementEntity::getWeightedLoad).average().orElse(0.0);
+
+        List<TrafficCycleEntity> cycles = cycleRepository.findByOrderByTimestampDesc(PageRequest.of(0, safeLimit));
+        double avgGreenSem1 = cycles.stream().mapToInt(TrafficCycleEntity::getSem1GreenSeconds).average().orElse(0.0);
+        double avgGreenSem2 = cycles.stream().mapToInt(TrafficCycleEntity::getSem2GreenSeconds).average().orElse(0.0);
+
+        long adaptiveCycles = cycles.stream().filter(c -> "ADAPTATIVO".equalsIgnoreCase(c.getMode())).count();
+        long fixedCycles = cycles.stream().filter(c -> "FIJO".equalsIgnoreCase(c.getMode())).count();
+        long emergencyCycles = cycles.stream().filter(TrafficCycleEntity::isEmergencyOverride).count();
+
+        List<TrafficMeasurementEntity> chronological = new ArrayList<>(recent);
+        Collections.reverse(chronological);
+
+        List<Map<String, Object>> timeline = chronological.stream()
+                .map(m -> Map.<String, Object>of(
+                        "timestamp", m.getTimestamp().toString(),
+                        "camId", m.getCamId(),
+                        "totalVehicles", m.getTotalVehicles(),
+                        "weightedLoad", Math.round(m.getWeightedLoad() * 10.0) / 10.0,
+                        "inferenceLatencyMs", m.getInferenceLatencyMs()
+                ))
+                .toList();
+
+        Map<String, Object> cam1Stats = buildCamStats("CAM-01", recent);
+        Map<String, Object> cam2Stats = buildCamStats("CAM-02", recent);
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("samplesCount", recent.size());
+        result.put("totalVehicles", totalVehicles);
+        result.put("totalAutos", totalAutos);
+        result.put("totalCombis", totalCombis);
+        result.put("totalMotos", totalMotos);
+        result.put("totalPeatones", totalPeatones);
+        result.put("totalEmergencias", totalEmergencias);
+        result.put("avgInferenceLatencyMs", Math.round(avgLatency * 10.0) / 10.0);
+        result.put("avgConfidence", Math.round(avgConfidence * 1000.0) / 10.0);
+        result.put("avgWeightedLoad", Math.round(avgLoad * 10.0) / 10.0);
+        result.put("cyclesRecorded", cycleRepository.count());
+        result.put("avgGreenSem1Seconds", Math.round(avgGreenSem1 * 10.0) / 10.0);
+        result.put("avgGreenSem2Seconds", Math.round(avgGreenSem2 * 10.0) / 10.0);
+        result.put("adaptiveCycles", adaptiveCycles);
+        result.put("fixedCycles", fixedCycles);
+        result.put("emergencyCycles", emergencyCycles);
+        result.put("byCamera", List.of(cam1Stats, cam2Stats));
+        result.put("timeline", timeline);
+        return result;
+    }
+
+    private Map<String, Object> buildCamStats(String camId, List<TrafficMeasurementEntity> rows) {
+        List<TrafficMeasurementEntity> camRows = rows.stream()
+                .filter(r -> camId.equals(r.getCamId()))
+                .toList();
+        int vehicles = camRows.stream().mapToInt(TrafficMeasurementEntity::getTotalVehicles).sum();
+        double avgLoad = camRows.stream().mapToDouble(TrafficMeasurementEntity::getWeightedLoad).average().orElse(0.0);
+        double avgLat = camRows.stream().mapToInt(TrafficMeasurementEntity::getInferenceLatencyMs).average().orElse(0.0);
         return Map.of(
-                "samplesCount", recent.size(),
-                "totalAutos", totalAutos,
-                "totalCombis", totalCombis,
-                "totalMotos", totalMotos,
-                "totalPeatones", totalPeatones,
-                "avgInferenceLatencyMs", Math.round(avgLatency * 10.0) / 10.0,
-                "cyclesRecorded", cycleRepository.count()
+                "camId", camId,
+                "samples", camRows.size(),
+                "totalVehicles", vehicles,
+                "avgWeightedLoad", Math.round(avgLoad * 10.0) / 10.0,
+                "avgLatencyMs", Math.round(avgLat * 10.0) / 10.0
         );
     }
 }

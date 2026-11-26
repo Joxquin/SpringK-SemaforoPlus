@@ -53,5 +53,6 @@ export const api = {
     }),
   getMeasurements: (limit = 20) => request(`/traffic/measurements?limit=${limit}`),
   getCycles: (limit = 20) => request(`/traffic/cycles?limit=${limit}`),
-  getAnalytics: () => request('/traffic/analytics'),
+  getAnalytics: (camId = 'ALL', limit = 100) =>
+    request(`/traffic/analytics?camId=${encodeURIComponent(camId)}&limit=${limit}`),
 }

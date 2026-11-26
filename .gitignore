@@ -11,3 +11,4 @@ venv/
 .idea/
 .vscode/
 *.iml
+semaforoplus-iot-gateway-*/

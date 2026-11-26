@@ -1,0 +1,85 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: semaforoplus-v2-postgres
+    environment:
+      POSTGRES_DB: semaforoplus_v2
+      POSTGRES_USER: semaforo_user
+      POSTGRES_PASSWORD: semaforo_password_2026
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_v2:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U semaforo_user -d semaforoplus_v2"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: semaforoplus-v2-mosquitto
+    ports:
+      - "1884:1883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - mosquitto_data_v2:/mosquitto/data
+    restart: unless-stopped
+
+  iot-gateway-service:
+    build: ./iot-gateway-service
+    container_name: semaforoplus-iot-gateway
+    ports:
+      - "8081:8081"
+      - "5005:5005/udp"
+    environment:
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+      TRAFFIC_CORE_URL: http://traffic-core-service:8082
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+
+  traffic-core-service:
+    build: ./traffic-core-service
+    container_name: semaforoplus-traffic-core
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/semaforoplus_v2
+      SPRING_DATASOURCE_USERNAME: semaforo_user
+      SPRING_DATASOURCE_PASSWORD: semaforo_password_2026
+      IOT_GATEWAY_URL: http://iot-gateway-service:8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ml-vision-service:
+    build: ./ml-vision-service
+    container_name: semaforoplus-ml-vision
+    ports:
+      - "5050:5050"
+    environment:
+      IOT_GATEWAY_URL: http://iot-gateway-service:8081
+      TRAFFIC_CORE_URL: http://traffic-core-service:8082
+    depends_on:
+      - iot-gateway-service
+      - traffic-core-service
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: semaforoplus-v2-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - iot-gateway-service
+      - traffic-core-service
+      - ml-vision-service
+    restart: unless-stopped
+
+volumes:
+  pgdata_v2:
+  mosquitto_data_v2:

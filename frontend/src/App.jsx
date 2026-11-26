@@ -1,13 +1,8 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import {
-  FileText,
-  Settings,
-} from 'lucide-react'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { api } from '@/services/api'
 import { AdminLayout } from '@/components/layout/AdminLayout'
-import { SectionShell } from '@/components/layout/SectionShell'
 import { PublicPortalPage } from '@/pages/PublicPortalPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
@@ -16,6 +11,8 @@ import { CamarasPage } from '@/pages/CamarasPage'
 import { AnalisisPage } from '@/pages/AnalisisPage'
 import { PrediccionesPage } from '@/pages/PrediccionesPage'
 import { IncidenciasPage } from '@/pages/IncidenciasPage'
+import { ReportesPage } from '@/pages/ReportesPage'
+import { ConfiguracionPage } from '@/pages/ConfiguracionPage'
 
 function ProtectedAdmin({ user, checking, onLogout }) {
   if (checking) {
@@ -66,26 +63,8 @@ export default function App() {
             <Route path="analisis" element={<AnalisisPage />} />
             <Route path="predicciones" element={<PrediccionesPage />} />
             <Route path="incidencias" element={<IncidenciasPage />} />
-            <Route
-              path="reportes"
-              element={
-                <SectionShell
-                  title="Reportes"
-                  subtitle="Generación de informes comparativos entre modo fijo y adaptativo."
-                  icon={FileText}
-                />
-              }
-            />
-            <Route
-              path="configuracion"
-              element={
-                <SectionShell
-                  title="Configuración"
-                  subtitle="Parámetros del nodo ESP32, cámaras, MQTT y preferencias del sistema."
-                  icon={Settings}
-                />
-              }
-            />
+            <Route path="reportes" element={<ReportesPage />} />
+            <Route path="configuracion" element={<ConfiguracionPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

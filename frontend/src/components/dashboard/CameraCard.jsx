@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CameraOff, Car, Bus, Bike, Users, Siren, Video } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -6,6 +6,12 @@ import { Badge } from '@/components/ui/Badge'
 export function CameraCard({ cam }) {
   const [imgError, setImgError] = useState(false)
   const online = Boolean(cam?.online)
+
+  useEffect(() => {
+    if (online) {
+      setImgError(false)
+    }
+  }, [online])
   const cls = cam?.classification || {
     autos: 0,
     combis: 0,

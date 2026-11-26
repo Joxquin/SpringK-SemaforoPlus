@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class UdpVideoService {
     private static final Logger log = LoggerFactory.getLogger(UdpVideoService.class);
     private static final long ANNOTATED_TTL_MS = 4000L;
+    private static final long RAW_TTL_MS = 5000L;
 
     @Value("${udp.video-port:5005}")
     private int videoPort;
@@ -141,10 +142,16 @@ public class UdpVideoService {
     }
 
     public byte[] getRawFrame(String camId) {
+        if (!hasRecentFrame(camId, RAW_TTL_MS)) {
+            return null;
+        }
         return rawFrames.get(camId);
     }
 
     public byte[] getLiveFrame(String camId) {
+        if (!hasRecentFrame(camId, RAW_TTL_MS)) {
+            return null;
+        }
         Long annotatedAt = annotatedTimestamps.get(camId);
         if (annotatedAt != null && (Instant.now().toEpochMilli() - annotatedAt) < ANNOTATED_TTL_MS) {
             byte[] frame = annotatedFrames.get(camId);

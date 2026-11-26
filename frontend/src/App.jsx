@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import {
   AlertTriangle,
   BarChart3,
-  Camera,
   FileText,
   Settings,
   Sparkles,
@@ -16,6 +15,7 @@ import { PublicPortalPage } from '@/pages/PublicPortalPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { InterseccionPage } from '@/pages/InterseccionPage'
+import { CamarasPage } from '@/pages/CamarasPage'
 
 function ProtectedAdmin({ user, checking, onLogout }) {
   if (checking) {
@@ -62,16 +62,7 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="interseccion" element={<InterseccionPage />} />
-            <Route
-              path="camaras"
-              element={
-                <SectionShell
-                  title="Cámaras ESP32-CAM"
-                  subtitle="Monitoreo MJPEG en tiempo real y clasificación vehicular YOLOv8."
-                  icon={Camera}
-                />
-              }
-            />
+            <Route path="camaras" element={<CamarasPage />} />
             <Route
               path="analisis"
               element={

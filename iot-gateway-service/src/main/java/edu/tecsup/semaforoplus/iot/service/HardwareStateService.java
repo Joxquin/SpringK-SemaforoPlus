@@ -18,7 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class HardwareStateService {
     private static final Logger log = LoggerFactory.getLogger(HardwareStateService.class);
-    private static final long HEARTBEAT_TIMEOUT_SECONDS = 35L;
+    private static final long ESP32_TIMEOUT_SECONDS = 10L;
+    private static final long CAM_TIMEOUT_SECONDS = 5L;
 
     private final RestClient restClient;
     private final UdpVideoService udpVideoService;
@@ -63,20 +64,20 @@ public class HardwareStateService {
         camClassifications.put("CAM-02", VehicleClassification.empty());
     }
 
-    private boolean isAlive(Instant lastHeartbeat) {
+    private boolean isAlive(Instant lastHeartbeat, long timeoutSeconds) {
         if (lastHeartbeat == null) {
             return false;
         }
-        return Instant.now().minusSeconds(HEARTBEAT_TIMEOUT_SECONDS).isBefore(lastHeartbeat);
+        return Instant.now().minusSeconds(timeoutSeconds).isBefore(lastHeartbeat);
     }
 
     public boolean isEsp32Online() {
-        return isAlive(lastEsp32Heartbeat);
+        return isAlive(lastEsp32Heartbeat, ESP32_TIMEOUT_SECONDS);
     }
 
     public boolean isCamOnline(String camId) {
         Instant hb = "CAM-01".equals(camId) ? lastCam1Heartbeat : lastCam2Heartbeat;
-        return isAlive(hb) || udpVideoService.hasRecentFrame(camId, HEARTBEAT_TIMEOUT_SECONDS * 1000L);
+        return isAlive(hb, CAM_TIMEOUT_SECONDS) || udpVideoService.hasRecentFrame(camId, CAM_TIMEOUT_SECONDS * 1000L);
     }
 
     public void markEsp32Status(String status) {

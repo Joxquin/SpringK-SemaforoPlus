@@ -122,7 +122,17 @@ public class MqttService {
     public void publishTrafficCommand(TrafficControlPayload payload) {
         try {
             if (client != null && client.isConnected()) {
-                String json = objectMapper.writeValueAsString(payload);
+                int priorityLane = "CAM-02".equals(payload.emergencyCamId()) ? 2 : 1;
+                Map<String, Object> cmd = Map.of(
+                        "phase", payload.phase(),
+                        "sem1State", payload.sem1State(),
+                        "sem2State", payload.sem2State(),
+                        "sem1AllocatedSeconds", payload.sem1GreenAllocated(),
+                        "sem2AllocatedSeconds", payload.sem2GreenAllocated(),
+                        "emergencyActive", payload.emergencyActive(),
+                        "priorityLane", priorityLane
+                );
+                String json = objectMapper.writeValueAsString(cmd);
                 MqttMessage msg = new MqttMessage(json.getBytes(StandardCharsets.UTF_8));
                 msg.setQos(1);
                 msg.setRetained(false);
@@ -145,15 +155,27 @@ public class MqttService {
             var cam1 = node.cameras().get(0);
             var cam2 = node.cameras().get(1);
 
-            Map<String, Object> displayPayload = Map.of(
-                    "sem1State", sem1.currentState().name(),
-                    "sem2State", sem2.currentState().name(),
-                    "sem1Remaining", sem1.remainingSeconds(),
-                    "sem2Remaining", sem2.remainingSeconds(),
-                    "emergency", node.activeEmergencyPriority(),
-                    "cam1Vehicles", cam1.classification().totalVehicles(),
-                    "cam2Vehicles", cam2.classification().totalVehicles()
-            );
+            int rem = "GREEN".equals(sem1.currentState().name()) || "YELLOW".equals(sem1.currentState().name())
+                    ? sem1.remainingSeconds()
+                    : sem2.remainingSeconds();
+
+            Map<String, Object> displayPayload = new java.util.LinkedHashMap<>();
+            displayPayload.put("lane1State", sem1.currentState().name());
+            displayPayload.put("lane2State", sem2.currentState().name());
+            displayPayload.put("remainingSeconds", rem);
+            displayPayload.put("sem1State", sem1.currentState().name());
+            displayPayload.put("sem2State", sem2.currentState().name());
+            displayPayload.put("sem1Remaining", sem1.remainingSeconds());
+            displayPayload.put("sem2Remaining", sem2.remainingSeconds());
+            displayPayload.put("emergency", node.activeEmergencyPriority());
+            displayPayload.put("cam1Total", cam1.classification().totalVehicles());
+            displayPayload.put("cam1Autos", cam1.classification().autos());
+            displayPayload.put("cam1Combis", cam1.classification().combis());
+            displayPayload.put("cam1Emergency", cam1.classification().unidadesEmergencia());
+            displayPayload.put("cam2Total", cam2.classification().totalVehicles());
+            displayPayload.put("cam2Autos", cam2.classification().autos());
+            displayPayload.put("cam2Combis", cam2.classification().combis());
+            displayPayload.put("cam2Emergency", cam2.classification().unidadesEmergencia());
 
             String json = objectMapper.writeValueAsString(displayPayload);
             MqttMessage msg = new MqttMessage(json.getBytes(StandardCharsets.UTF_8));

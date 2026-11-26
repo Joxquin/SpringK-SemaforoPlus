@@ -116,9 +116,13 @@ public class HardwareStateService {
         }
         if (payload.sem1Remaining() != null && "STANDBY".equals(currentPhase)) {
             sem1Remaining = payload.sem1Remaining();
+        } else if (payload.remainingSeconds() != null && "STANDBY".equals(currentPhase)) {
+            sem1Remaining = payload.remainingSeconds();
         }
         if (payload.sem2Remaining() != null && "STANDBY".equals(currentPhase)) {
             sem2Remaining = payload.sem2Remaining();
+        } else if (payload.remainingSeconds() != null && "STANDBY".equals(currentPhase)) {
+            sem2Remaining = payload.remainingSeconds();
         }
         forwardTelemetryToCore(payload);
     }

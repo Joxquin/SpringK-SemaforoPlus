@@ -42,16 +42,29 @@ public class IotController {
         var sem2 = node.trafficLights().get(1);
         var cam1 = node.cameras().get(0);
         var cam2 = node.cameras().get(1);
-        return ResponseEntity.ok(Map.of(
-                "sem1State", sem1.currentState().name(),
-                "sem2State", sem2.currentState().name(),
-                "sem1Remaining", sem1.remainingSeconds(),
-                "sem2Remaining", sem2.remainingSeconds(),
-                "emergency", node.activeEmergencyPriority(),
-                "cam1Vehicles", cam1.classification().totalVehicles(),
-                "cam2Vehicles", cam2.classification().totalVehicles(),
-                "iotConnected", node.iotConnected()
-        ));
+        int rem = "GREEN".equals(sem1.currentState().name()) || "YELLOW".equals(sem1.currentState().name())
+                ? sem1.remainingSeconds()
+                : sem2.remainingSeconds();
+
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("lane1State", sem1.currentState().name());
+        body.put("lane2State", sem2.currentState().name());
+        body.put("remainingSeconds", rem);
+        body.put("sem1State", sem1.currentState().name());
+        body.put("sem2State", sem2.currentState().name());
+        body.put("sem1Remaining", sem1.remainingSeconds());
+        body.put("sem2Remaining", sem2.remainingSeconds());
+        body.put("emergency", node.activeEmergencyPriority());
+        body.put("cam1Total", cam1.classification().totalVehicles());
+        body.put("cam1Autos", cam1.classification().autos());
+        body.put("cam1Combis", cam1.classification().combis());
+        body.put("cam1Emergency", cam1.classification().unidadesEmergencia());
+        body.put("cam2Total", cam2.classification().totalVehicles());
+        body.put("cam2Autos", cam2.classification().autos());
+        body.put("cam2Combis", cam2.classification().combis());
+        body.put("cam2Emergency", cam2.classification().unidadesEmergencia());
+        body.put("iotConnected", node.iotConnected());
+        return ResponseEntity.ok(body);
     }
 
     @PostMapping("/cam/frame")

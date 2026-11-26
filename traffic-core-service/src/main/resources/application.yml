@@ -5,7 +5,7 @@ spring:
   application:
     name: traffic-core-service
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/semaforoplus}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/semaforoplus_v2}
     username: ${SPRING_DATASOURCE_USERNAME:semaforo_user}
     password: ${SPRING_DATASOURCE_PASSWORD:semaforo_password_2026}
     hikari:

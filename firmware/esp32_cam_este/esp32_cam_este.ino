@@ -2,7 +2,7 @@
    Semáforo+ · ESP32-CAM 02 (Poste Este · Calle Los Arces)
    Proyecto: TECSUP (Arequipa) · ODS 11: Ciudades y Comunidades Sostenibles
    Hardware: Módulo ESP32-CAM con Sensor RHYX-M21-45
-   Pantalla: LCD 16x2 SIN I2C (Modo Paralelo 4-bit: RS=14, EN=15, D4=13, D5=12, D6=2, D7=4)
+   Pantalla: LCD 16x2 CON I2C (SDA -> GPIO 14, SCL -> GPIO 15, Dir 0x27)
    Identificador: CAM-02 (Poste Este)
    
    REFERENCIA DE COMPATIBILIDAD SENSOR:
@@ -12,7 +12,7 @@
    - Conversión On-the-fly: Se realiza compresión eficiente de software (frame2jpg)
      para transmitir JPEG ultraliviano (~8-15KB) por datagramas UDP a la VPS.
    - Servidor HTTP local embebido en puerto 80 para depuración visual directa.
-   - Display LCD 16x2 paralelo muestra tiempo restante y detección ML real cada 1s.
+   - Display LCD 16x2 con I2C muestra tiempo restante y detección ML real cada 1s.
    ========================================================================== */
 
 #include "esp_camera.h"
@@ -21,13 +21,14 @@
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
 #include <PubSubClient.h>
-#include <LiquidCrystal.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 #include "esp_http_server.h"
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
 
 // ---------- CONFIGURACIÓN DE RED Y VERSIÓN ----------
-const char* FIRMWARE_VERSION = "2.6.1-RHYX-LCD4B";
+const char* FIRMWARE_VERSION = "2.6.2-RHYX-LCD-I2C";
 const char* DEVICE_TYPE      = "ESP32-CAM-ESTE";
 const char* CAM_ID_STR       = "CAM-02"; // Exactamente 6 caracteres para el receptor UDP
 const char* WIFI_SSID        = "S24";
@@ -53,15 +54,11 @@ WiFiClient mqttWifiClient;
 PubSubClient mqttClient(mqttWifiClient);
 unsigned long lastMqttReconnectAttempt = 0;
 
-// ---------- CONFIGURACIÓN LCD 16x2 SIN I2C (PARALELO 4-BIT) ----------
-// Pines libres del bus SD en ESP32-CAM (RW del LCD va directo a GND)
-#define LCD_RS 14
-#define LCD_EN 15
-#define LCD_D4 13
-#define LCD_D5 12
-#define LCD_D6  2
-#define LCD_D7  4
-LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+// ---------- CONFIGURACIÓN LCD 16x2 I2C (Pines libres SD del ESP32-CAM) ----------
+#define LCD_I2C_SDA   14
+#define LCD_I2C_SCL   15
+#define LCD_I2C_ADDR  0x27  // Cambiar a 0x3F si tu módulo PCF8574 usa esa dirección
+LiquidCrystal_I2C lcd(LCD_I2C_ADDR, 16, 2);
 
 // Instancia UDP
 WiFiUDP udp;
@@ -412,8 +409,10 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
-  // Inicializar LCD 16x2 paralelo (4-bit sin I2C)
-  lcd.begin(16, 2);
+  // Inicializar LCD 16x2 I2C
+  Wire.begin(LCD_I2C_SDA, LCD_I2C_SCL);
+  lcd.init();
+  lcd.backlight();
   lcd.setCursor(0, 0);
   lcd.print("Semaforo+ ESTE  ");
   lcd.setCursor(0, 1);

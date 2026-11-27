@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import {
   Activity,
   Bike,
@@ -6,7 +6,9 @@ import {
   Camera,
   CameraOff,
   Car,
+  Expand,
   Maximize2,
+  Minimize2,
   RefreshCw,
   Search,
   Siren,
@@ -69,7 +71,36 @@ export function CamarasPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [zoomedCamId, setZoomedCamId] = useState(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const fullscreenContainerRef = useRef(null)
+
+  // Sincronizar estado si el usuario sale de pantalla completa con tecla Escape
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement))
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    }
+  }, [])
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        if (fullscreenContainerRef.current) {
+          await fullscreenContainerRef.current.requestFullscreen()
+        }
+      } else {
+        await document.exitFullscreen()
+      }
+    } catch (err) {
+      console.error('Error toggling fullscreen:', err)
+      // Fallback si la API de fullscreen está bloqueada
+      setIsFullscreen(!isFullscreen)
+    }
+  }
 
   const loadData = async () => {
     try {
@@ -304,8 +335,8 @@ export function CamarasPage() {
       </Card>
 
       {zoomedCam && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 space-y-5">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <Card className="w-full max-w-4xl max-h-[92vh] overflow-y-auto p-5 sm:p-6 space-y-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -314,18 +345,65 @@ export function CamarasPage() {
                     {zoomedCam.online ? 'UDP En línea' : 'Sin señal UDP'}
                   </Badge>
                 </div>
-                <h2 className="text-2xl font-bold mt-2">{zoomedCam.name}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold mt-2">{zoomedCam.name}</h2>
                 <p className="text-xs text-[var(--on-surface-variant)]">
                   {zoomedCam.avenue} · IP {zoomedCam.ipAddress}
                 </p>
               </div>
-              <Button variant="tonal" size="icon" onClick={() => setZoomedCamId(null)}>
-                <X className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="filled"
+                  size="sm"
+                  onClick={toggleFullscreen}
+                  title="Ver en pantalla completa sin UI"
+                  className="gap-1.5"
+                >
+                  <Expand className="w-4 h-4" />
+                  <span className="hidden sm:inline">Pantalla Completa</span>
+                </Button>
+                <Button
+                  variant="tonal"
+                  size="icon"
+                  onClick={() => {
+                    if (document.fullscreenElement) {
+                      document.exitFullscreen().catch(() => {})
+                    }
+                    setZoomedCamId(null)
+                  }}
+                  title="Cerrar modal"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
-            <div className="aspect-[16/9] rounded-3xl overflow-hidden bg-[var(--surface-container-high)] border border-[var(--outline-variant)]/40">
-              <CameraStream cam={zoomedCam} />
+            {/* Contenedor del video: puede entrar en Fullscreen API para ocultar toda la UI */}
+            <div
+              ref={fullscreenContainerRef}
+              className={cn(
+                'relative overflow-hidden bg-black flex items-center justify-center group',
+                isFullscreen
+                  ? 'w-screen h-screen'
+                  : 'aspect-[16/9] rounded-3xl border border-[var(--outline-variant)]/40'
+              )}
+            >
+              <CameraStream
+                cam={zoomedCam}
+                className={isFullscreen ? 'w-full h-full object-contain' : 'w-full h-full object-cover'}
+              />
+
+              {/* Botón flotante para salir o alternar pantalla completa cuando esté en fullscreen */}
+              {isFullscreen && (
+                <div className="absolute top-4 right-4 z-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                  <button
+                    onClick={toggleFullscreen}
+                    className="p-3 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition-all shadow-lg cursor-pointer"
+                    title="Salir de pantalla completa (Esc)"
+                  >
+                    <Minimize2 className="w-6 h-6" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

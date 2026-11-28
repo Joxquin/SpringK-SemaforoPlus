@@ -504,13 +504,13 @@ static void sendBufferUDP(const uint8_t *buf, size_t len) {
 }
 
 void loop() {
-  if (WiFi.status() == WL_CONNECTED && latestBuf != nullptr && latestLen > 0 && frameSeq != lastUdpSeq) {
+  if (WiFi.status() == WL_CONNECTED && latestJpg != nullptr && latestLen > 0 && latestId != lastUdpSeq) {
     if (xSemaphoreTake(frameLock, pdMS_TO_TICKS(10)) == pdTRUE) {
       size_t len = latestLen;
-      uint32_t seq = frameSeq;
+      uint32_t seq = latestId;
       uint8_t *copy = (uint8_t *)malloc(len);
       if (copy) {
-        memcpy(copy, latestBuf, len);
+        memcpy(copy, latestJpg, len);
       }
       xSemaphoreGive(frameLock);
       if (copy) {

@@ -307,7 +307,7 @@ void setup() {
       }
     },
     "udpStreamTask",
-    4096,
+    8192,
     NULL,
     1,
     NULL,

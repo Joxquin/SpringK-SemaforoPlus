@@ -55,7 +55,7 @@ void sendFrameUDP(camera_fb_t *fb) {
   } else {
     uint8_t *jpg_buf = NULL;
     size_t jpg_len = 0;
-    if (frame2jpg(fb, 80, &jpg_buf, &jpg_len)) {
+    if (frame2jpg(fb, 90, &jpg_buf, &jpg_len)) {
       sendBufferUDP(jpg_buf, jpg_len);
       free(jpg_buf);
     }
@@ -2058,7 +2058,7 @@ void setup() {
     // ========================================================
 
     config.frame_size =
-        FRAMESIZE_240X240;
+        FRAMESIZE_QVGA;
       
 
     // ========================================================

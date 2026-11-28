@@ -82,9 +82,11 @@ public class RealtimeController {
         response.setContentType("multipart/x-mixed-replace; boundary=frame");
         response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         try (OutputStream out = response.getOutputStream()) {
+            byte[] lastFrame = null;
             while (!Thread.currentThread().isInterrupted()) {
                 byte[] frame = udpVideoService.getLiveFrame(camId);
-                if (frame != null) {
+                if (frame != null && frame != lastFrame) {
+                    lastFrame = frame;
                     String header = "--frame\r\nContent-Type: image/jpeg\r\nContent-Length: " + frame.length + "\r\n\r\n";
                     out.write(header.getBytes(StandardCharsets.US_ASCII));
                     out.write(frame);

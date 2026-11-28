@@ -92,6 +92,7 @@ void sendFrameUDP(camera_fb_t * fb) {
     // Datos binarios JPEG del chunk
     udp.write(fb->buf + offset, thisChunkLen);
     udp.endPacket();
+    delay(1);
   }
 }
 

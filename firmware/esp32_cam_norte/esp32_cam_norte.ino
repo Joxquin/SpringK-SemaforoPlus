@@ -291,23 +291,35 @@ void setup() {
     lcd.setCursor(0, 1);
     lcd.print("Online: Conectad");
   }
+
+  // Tarea dedicada para streaming UDP (no bloqueada por reconexiones MQTT)
+  xTaskCreatePinnedToCore(
+    [](void *pvParameters) {
+      while (true) {
+        if (WiFi.status() == WL_CONNECTED) {
+          camera_fb_t *fb = esp_camera_fb_get();
+          if (fb) {
+            sendFrameUDP(fb);
+            esp_camera_fb_return(fb);
+          }
+        }
+        vTaskDelay(pdMS_TO_TICKS(5));
+      }
+    },
+    "udpStreamTask",
+    4096,
+    NULL,
+    1,
+    NULL,
+    1
+  );
 }
 
 void loop() {
   unsigned long now = millis();
 
-  // 1. Streaming UDP continuo hacia la VPS / ML Vision (~15 FPS)
+  // Mantener MQTT conectado para telemetría y tiempos de semáforo
   if (WiFi.status() == WL_CONNECTED) {
-    if (now - lastUdpFrameTime >= UDP_FRAME_INTERVAL_MS) {
-      lastUdpFrameTime = now;
-      camera_fb_t *fb = esp_camera_fb_get();
-      if (fb) {
-        sendFrameUDP(fb);
-        esp_camera_fb_return(fb);
-      }
-    }
-
-    // 2. Mantener MQTT conectado para telemetría y tiempos de semáforo
     if (!mqttClient.connected()) {
       if (now - lastMqttReconnectAttempt >= 5000) {
         lastMqttReconnectAttempt = now;
@@ -318,5 +330,5 @@ void loop() {
     }
   }
 
-  delay(2);
+  delay(20);
 }

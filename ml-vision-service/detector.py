@@ -86,7 +86,10 @@ def process_camera(model, cam_id, avenue_label):
         return
 
     t0 = time.time()
-    pil_img = Image.open(io.BytesIO(resp.content)).convert("RGB")
+    try:
+        pil_img = Image.open(io.BytesIO(resp.content)).convert("RGB")
+    except Exception:
+        return
     img_rgb = np.array(pil_img)
     img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
 

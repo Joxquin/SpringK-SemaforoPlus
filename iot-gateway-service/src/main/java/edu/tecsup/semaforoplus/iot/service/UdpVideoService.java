@@ -69,9 +69,15 @@ public class UdpVideoService {
             byte[] buffer = new byte[2048];
             log.info("UDP video receiver listening on port {}", videoPort);
             while (running) {
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
-                processPacket(packet.getData(), packet.getLength());
+                try {
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                    socket.receive(packet);
+                    processPacket(packet.getData(), packet.getLength());
+                } catch (Exception e) {
+                    if (running) {
+                        log.warn("Error processing UDP packet: {}", e.getMessage());
+                    }
+                }
             }
         } catch (Exception e) {
             if (running) {
@@ -102,7 +108,7 @@ public class UdpVideoService {
             return existing;
         });
 
-        if (assembly.parts[partIndex] == null) {
+        if (partIndex < assembly.parts.length && assembly.parts[partIndex] == null) {
             byte[] chunk = new byte[chunkLen];
             System.arraycopy(data, 12, chunk, 0, chunkLen);
             assembly.parts[partIndex] = chunk;

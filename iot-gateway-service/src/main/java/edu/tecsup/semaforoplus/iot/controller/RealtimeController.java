@@ -91,7 +91,7 @@ public class RealtimeController {
                     out.write("\r\n".getBytes(StandardCharsets.US_ASCII));
                     out.flush();
                 }
-                Thread.sleep(100);
+                Thread.sleep(40);
             }
         } catch (Exception ignored) {}
     }

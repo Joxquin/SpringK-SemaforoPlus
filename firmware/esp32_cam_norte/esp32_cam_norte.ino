@@ -58,7 +58,7 @@ bool lcdAvailable = false;
 WiFiUDP udp;
 uint16_t currentFrameId = 0;
 unsigned long lastUdpFrameTime = 0;
-const unsigned long UDP_FRAME_INTERVAL_MS = 66; // ~15 FPS estables
+const unsigned long UDP_FRAME_INTERVAL_MS = 0; // ~15 FPS estables
 
 void startCameraServer();
 void setupLedFlash();
@@ -317,5 +317,5 @@ void loop() {
     }
   }
 
-  delay(5);
+  delay(2);
 }

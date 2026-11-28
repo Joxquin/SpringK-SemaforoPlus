@@ -201,7 +201,7 @@ def run_ml_inference_loop():
     while True:
         for cam_id, avenue in CAMERAS:
             process_camera(model, cam_id, avenue)
-        time.sleep(0.2)
+        time.sleep(0.01)
 
 
 class MLStatusHandler(BaseHTTPRequestHandler):

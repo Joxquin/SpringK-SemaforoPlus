@@ -145,8 +145,6 @@ public class HardwareStateService {
         VehicleClassification vc = new VehicleClassification(
                 payload.autos() != null ? payload.autos() : 0,
                 payload.combis() != null ? payload.combis() : 0,
-                payload.motos() != null ? payload.motos() : 0,
-                payload.peatones() != null ? payload.peatones() : 0,
                 payload.unidadesEmergencia() != null ? payload.unidadesEmergencia() : 0
         );
         camClassifications.put(camId, vc);

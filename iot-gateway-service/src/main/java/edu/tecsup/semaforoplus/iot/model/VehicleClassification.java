@@ -3,16 +3,14 @@ package edu.tecsup.semaforoplus.iot.model;
 public record VehicleClassification(
         int autos,
         int combis,
-        int motos,
-        int peatones,
         int unidadesEmergencia
 ) {
     public int totalVehicles() {
-        return autos + combis + motos;
+        return autos + combis;
     }
 
     public double weightedTrafficLoad() {
-        return autos * 1.0 + combis * 2.2 + motos * 0.5;
+        return autos * 1.0 + combis * 2.2;
     }
 
     public boolean hasEmergencyVehicle() {
@@ -20,6 +18,6 @@ public record VehicleClassification(
     }
 
     public static VehicleClassification empty() {
-        return new VehicleClassification(0, 0, 0, 0, 0);
+        return new VehicleClassification(0, 0, 0);
     }
 }

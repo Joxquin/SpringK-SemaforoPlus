@@ -263,7 +263,7 @@ export function AnalisisPage() {
               <div className="space-y-3.5">
                 {composition.map((item) => {
                   const Icon = item.icon
-                  const denom = Math.max(1, totalVehicles + (analytics?.totalPeatones || 0))
+                  const denom = Math.max(1, totalVehicles)
                   const pct = Math.round((item.value / denom) * 100)
                   return (
                     <div key={item.label} className="space-y-1.5">

@@ -50,10 +50,9 @@ public class AdaptiveTrafficEngineService {
     public void onDetection(CamDetectionDto dto) {
         int autos = dto.autos() != null ? dto.autos() : 0;
         int combis = dto.combis() != null ? dto.combis() : 0;
-        int motos = dto.motos() != null ? dto.motos() : 0;
         int emerg = dto.unidadesEmergencia() != null ? dto.unidadesEmergencia() : 0;
-        int total = autos + combis + motos;
-        double load = autos * 1.0 + combis * 2.2 + motos * 0.5;
+        int total = autos + combis;
+        double load = autos * 1.0 + combis * 2.2;
 
         if ("CAM-01".equals(dto.camId())) {
             cam1Vehicles = total;

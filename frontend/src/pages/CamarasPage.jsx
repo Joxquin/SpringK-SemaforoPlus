@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import {
   Activity,
-  Bike,
   Bus,
   Camera,
   CameraOff,
@@ -12,7 +11,6 @@ import {
   RefreshCw,
   Search,
   Siren,
-  Users,
   Video,
   Wifi,
   WifiOff,
@@ -218,8 +216,6 @@ export function CamarasPage() {
           const cls = cam.classification || {
             autos: 0,
             combis: 0,
-            motos: 0,
-            peatones: 0,
             unidadesEmergencia: 0,
           }
           const totalVeh = cls.autos + cls.combis

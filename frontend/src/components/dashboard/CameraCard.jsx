@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CameraOff, Car, Bus, Bike, Users, Siren, Video } from 'lucide-react'
+import { CameraOff, Car, Bus, Siren, Video } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 
@@ -15,8 +15,6 @@ export function CameraCard({ cam }) {
   const cls = cam?.classification || {
     autos: 0,
     combis: 0,
-    motos: 0,
-    peatones: 0,
     unidadesEmergencia: 0,
   }
 

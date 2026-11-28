@@ -18,8 +18,6 @@ public class TrafficMeasurementEntity {
 
     private int autos;
     private int combis;
-    private int motos;
-    private int peatones;
     private int unidadesEmergencia;
     private int totalVehicles;
     private double weightedLoad;
@@ -38,10 +36,6 @@ public class TrafficMeasurementEntity {
     public void setAutos(int autos) { this.autos = autos; }
     public int getCombis() { return combis; }
     public void setCombis(int combis) { this.combis = combis; }
-    public int getMotos() { return motos; }
-    public void setMotos(int motos) { this.motos = motos; }
-    public int getPeatones() { return peatones; }
-    public void setPeatones(int peatones) { this.peatones = peatones; }
     public int getUnidadesEmergencia() { return unidadesEmergencia; }
     public void setUnidadesEmergencia(int unidadesEmergencia) { this.unidadesEmergencia = unidadesEmergencia; }
     public int getTotalVehicles() { return totalVehicles; }

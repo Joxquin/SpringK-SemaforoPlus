@@ -24,8 +24,8 @@ MAQUETA_VEHICLE_PROXY_CLASSES = {28, 64, 65, 67}
 NATIVE_VEHICLE_CLASSES = {2, 5, 6, 7}
 
 latest_detections = {
-    "CAM-01": {"autos": 0, "combis": 0, "motos": 0, "peatones": 0, "unidadesEmergencia": 0, "inferenceLatencyMs": 0, "fps": 0},
-    "CAM-02": {"autos": 0, "combis": 0, "motos": 0, "peatones": 0, "unidadesEmergencia": 0, "inferenceLatencyMs": 0, "fps": 0},
+    "CAM-01": {"autos": 0, "combis": 0, "unidadesEmergencia": 0, "inferenceLatencyMs": 0, "fps": 0},
+    "CAM-02": {"autos": 0, "combis": 0, "unidadesEmergencia": 0, "inferenceLatencyMs": 0, "fps": 0},
 }
 emergency_override = {"CAM-01": False, "CAM-02": False}
 
@@ -92,6 +92,20 @@ def process_camera(model, cam_id, avenue_label):
 
     gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
     if float(np.mean(gray)) < 20.0 and float(np.std(gray)) < 12.0:
+        zero_payload = {
+            "camId": cam_id,
+            "autos": 0,
+            "combis": 0,
+            "unidadesEmergencia": 0,
+            "fps": 0,
+            "inferenceLatencyMs": 0,
+            "confidenceAvg": 0.0,
+        }
+        latest_detections[cam_id] = zero_payload
+        try:
+            requests.post(f"{IOT_GATEWAY_URL}/api/v1/iot/cam/detection", json=zero_payload, timeout=1.5)
+        except Exception:
+            pass
         return
 
     results = model.predict(img_rgb, verbose=False, conf=0.25, imgsz=320)
@@ -113,7 +127,7 @@ def process_camera(model, cam_id, avenue_label):
             continue
         filtered.append(det)
 
-    autos = combis = motos = peatones = emergencias = 0
+    autos = combis = emergencias = 0
     confs = []
 
     for xyxy, cls_id, conf, _ in filtered:
@@ -169,8 +183,6 @@ def process_camera(model, cam_id, avenue_label):
         "camId": cam_id,
         "autos": autos,
         "combis": combis,
-        "motos": motos,
-        "peatones": peatones,
         "unidadesEmergencia": emergencias,
         "fps": min(20, fps),
         "inferenceLatencyMs": latency_ms,

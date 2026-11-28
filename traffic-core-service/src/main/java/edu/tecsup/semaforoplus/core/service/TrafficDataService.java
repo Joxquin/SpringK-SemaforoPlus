@@ -48,19 +48,15 @@ public class TrafficDataService {
     public void saveDetection(CamDetectionDto dto) {
         int autos = dto.autos() != null ? dto.autos() : 0;
         int combis = dto.combis() != null ? dto.combis() : 0;
-        int motos = dto.motos() != null ? dto.motos() : 0;
-        int peatones = dto.peatones() != null ? dto.peatones() : 0;
         int emerg = dto.unidadesEmergencia() != null ? dto.unidadesEmergencia() : 0;
 
         TrafficMeasurementEntity m = new TrafficMeasurementEntity();
         m.setCamId(dto.camId() != null ? dto.camId() : "CAM-01");
         m.setAutos(autos);
         m.setCombis(combis);
-        m.setMotos(motos);
-        m.setPeatones(peatones);
         m.setUnidadesEmergencia(emerg);
-        m.setTotalVehicles(autos + combis + motos);
-        m.setWeightedLoad(autos * 1.0 + combis * 2.2 + motos * 0.5);
+        m.setTotalVehicles(autos + combis);
+        m.setWeightedLoad(autos * 1.0 + combis * 2.2);
         m.setInferenceLatencyMs(dto.inferenceLatencyMs() != null ? dto.inferenceLatencyMs() : 0);
         m.setConfidenceAvg(dto.confidenceAvg() != null ? dto.confidenceAvg() : 0.0);
         m.setTimestamp(Instant.now());
@@ -137,8 +133,7 @@ public class TrafficDataService {
             Map<String, Object> cls = (Map<String, Object>) cam.getOrDefault("classification", Map.of());
 
             int vehicles = ((Number) cls.getOrDefault("autos", 0)).intValue()
-                    + ((Number) cls.getOrDefault("combis", 0)).intValue()
-                    + ((Number) cls.getOrDefault("motos", 0)).intValue();
+                    + ((Number) cls.getOrDefault("combis", 0)).intValue();
             boolean camOn = Boolean.TRUE.equals(cam.get("online"));
             boolean lightOn = Boolean.TRUE.equals(light.get("online"));
             int cong = camOn ? Math.min(100, vehicles * 10) : 0;
@@ -241,10 +236,8 @@ public class TrafficDataService {
 
         int totalAutos = recent.stream().mapToInt(TrafficMeasurementEntity::getAutos).sum();
         int totalCombis = recent.stream().mapToInt(TrafficMeasurementEntity::getCombis).sum();
-        int totalMotos = recent.stream().mapToInt(TrafficMeasurementEntity::getMotos).sum();
-        int totalPeatones = recent.stream().mapToInt(TrafficMeasurementEntity::getPeatones).sum();
         int totalEmergencias = recent.stream().mapToInt(TrafficMeasurementEntity::getUnidadesEmergencia).sum();
-        int totalVehicles = totalAutos + totalCombis + totalMotos;
+        int totalVehicles = totalAutos + totalCombis;
 
         double avgLatency = recent.stream().mapToInt(TrafficMeasurementEntity::getInferenceLatencyMs).average().orElse(0.0);
         double avgConfidence = recent.stream().mapToDouble(TrafficMeasurementEntity::getConfidenceAvg).average().orElse(0.0);
@@ -279,8 +272,6 @@ public class TrafficDataService {
         result.put("totalVehicles", totalVehicles);
         result.put("totalAutos", totalAutos);
         result.put("totalCombis", totalCombis);
-        result.put("totalMotos", totalMotos);
-        result.put("totalPeatones", totalPeatones);
         result.put("totalEmergencias", totalEmergencias);
         result.put("avgInferenceLatencyMs", Math.round(avgLatency * 10.0) / 10.0);
         result.put("avgConfidence", Math.round(avgConfidence * 1000.0) / 10.0);

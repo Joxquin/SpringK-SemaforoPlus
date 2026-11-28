@@ -5,8 +5,6 @@ public record CamDetectionPayload(
         String ipAddress,
         Integer autos,
         Integer combis,
-        Integer motos,
-        Integer peatones,
         Integer unidadesEmergencia,
         Integer fps,
         Integer inferenceLatencyMs,

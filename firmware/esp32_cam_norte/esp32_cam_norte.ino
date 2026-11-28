@@ -1,32 +1,70 @@
+/* ==========================================================================
+   Semáforo+ · ESP32-CAM 01 (Poste Norte · Av. Ejército)
+   Proyecto: TECSUP (Arequipa) · ODS 11: Ciudades y Comunidades Sostenibles
+   Hardware: Módulo AI-Thinker ESP32-CAM (Sensor OV2640 + 4MB PSRAM)
+   Pantalla: LCD 16x2 CON I2C (SDA -> GPIO 14, SCL -> GPIO 15, Dir 0x27)
+   
+   Streaming: Protocolo UDP Ultra-Baja Latencia (Calibrado de Fábrica)
+   Destino:   34.122.14.13:5005 (VPS Cloud)
+   Display:   Suscrito a MQTT telemetría y tiempo de semáforo
+   ========================================================================== */
+
 #include <Arduino.h>
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include <PubSubClient.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
 
 // ===========================
 // Select camera model in board_config.h
 // ===========================
 #include "board_config.h"
 
-// ===========================
-// Credenciales WiFi y Servidor UDP
-// ===========================
-const char *ssid = "S24";
-const char *password = "122344566";
+// ---------- CONFIGURACIÓN DE RED Y DESTINO ----------
+const char* FIRMWARE_VERSION = "2.7.0-FULL";
+const char* DEVICE_TYPE      = "ESP32-CAM-NORTE";
+const char* CAM_ID_STR       = "CAM-01"; // Exactamente 6 caracteres para el backend
+const char* ssid             = "S24";
+const char* password         = "122344566";
 
-const char *UDP_HOST = "34.122.14.13";
-const int   UDP_PORT = 5005;
-const char *CAM_ID_STR = "CAM-01"; // Exactamente 6 caracteres para el backend
+// Destino UDP (VPS Cloud)
+const char* UDP_HOST         = "34.122.14.13";
+const int   UDP_PORT         = 5005;
 
+// ---------- CONFIGURACIÓN MQTT (DISPLAY / TELEMETRÍA) ----------
+const char* MQTT_HOST          = "34.122.14.13";
+const int   MQTT_PORT          = 1883;
+const char* MQTT_USER          = "joxquin";
+const char* MQTT_PASS          = "Joxquin123";
+const char* MQTT_CLIENT_ID     = "esp32-cam-norte";
+const char* MQTT_TOPIC_DISPLAY = "semaforoplus/node-01/display/state";
+
+WiFiClient mqttWifiClient;
+PubSubClient mqttClient(mqttWifiClient);
+unsigned long lastMqttReconnectAttempt = 0;
+
+// ---------- CONFIGURACIÓN LCD 16x2 I2C (GPIO 14 y 15) ----------
+#define LCD_I2C_SDA   14
+#define LCD_I2C_SCL   15
+#define LCD_I2C_ADDR  0x27
+LiquidCrystal_I2C lcd(LCD_I2C_ADDR, 16, 2);
+bool lcdAvailable = false;
+
+// Instancia UDP
 WiFiUDP udp;
 uint16_t currentFrameId = 0;
 unsigned long lastUdpFrameTime = 0;
-const unsigned long UDP_FRAME_INTERVAL_MS = 66; // ~15 FPS estables sin saturar WiFi
+const unsigned long UDP_FRAME_INTERVAL_MS = 66; // ~15 FPS estables
 
 void startCameraServer();
 void setupLedFlash();
 
-void sendFrameUDP(camera_fb_t *fb) {
+// Envío de fotograma JPEG fragmentado por datagramas UDP (MTU de 1024 bytes)
+void sendFrameUDP(camera_fb_t * fb) {
   if (WiFi.status() != WL_CONNECTED || fb == NULL) return;
 
   const int CHUNK_SIZE = 1024;
@@ -57,11 +95,93 @@ void sendFrameUDP(camera_fb_t *fb) {
   }
 }
 
+String extractJsonString(const String& json, const String& key) {
+  String pattern = "\"" + key + "\":\"";
+  int start = json.indexOf(pattern);
+  if (start < 0) return "";
+  start += pattern.length();
+  int end = json.indexOf("\"", start);
+  if (end < 0) return "";
+  return json.substring(start, end);
+}
+
+int extractJsonInt(const String& json, const String& key) {
+  String pattern = "\"" + key + "\":";
+  int start = json.indexOf(pattern);
+  if (start < 0) return 0;
+  start += pattern.length();
+  int end = start;
+  while (end < (int)json.length() && (isDigit(json[end]) || json[end] == '-')) {
+    end++;
+  }
+  if (end == start) return 0;
+  return json.substring(start, end).toInt();
+}
+
+String translateState(const String& st) {
+  if (st == "GREEN")  return "VERDE";
+  if (st == "YELLOW") return "AMBAR";
+  if (st == "RED")    return "ROJO ";
+  return st.length() > 5 ? st.substring(0, 5) : st;
+}
+
+void updateLcdDisplay(const String& state, int remainingSec, int totalDet, int autos, int combis, int emerg) {
+  if (!lcdAvailable) return;
+  char line0[17];
+  char line1[17];
+  if (emerg > 0) {
+    snprintf(line0, sizeof(line0), "N:SOS!!  T:%3ds ", remainingSec);
+    snprintf(line1, sizeof(line1), "ALERTA AMBULANC.");
+  } else {
+    snprintf(line0, sizeof(line0), "N:%-5s  T:%3ds ", translateState(state).c_str(), remainingSec);
+    snprintf(line1, sizeof(line1), "Det:%2d A:%2d C:%2d", totalDet, autos, combis);
+  }
+  lcd.setCursor(0, 0);
+  lcd.print(line0);
+  lcd.setCursor(0, 1);
+  lcd.print(line1);
+}
+
+void applyDisplayJson(const String& json) {
+  String laneState = extractJsonString(json, "lane1State");
+  int remaining    = extractJsonInt(json, "remainingSeconds");
+  int camTotal     = extractJsonInt(json, "cam1Total");
+  int camAutos     = extractJsonInt(json, "cam1Autos");
+  int camCombis    = extractJsonInt(json, "cam1Combis");
+  int camEmerg     = extractJsonInt(json, "cam1Emergency");
+
+  if (laneState.length() > 0) {
+    updateLcdDisplay(laneState, remaining, camTotal, camAutos, camCombis, camEmerg);
+  }
+}
+
+void mqttDisplayCallback(char* topic, byte* payload, unsigned int length) {
+  String json;
+  json.reserve(length);
+  for (unsigned int i = 0; i < length; i++) {
+    json += (char)payload[i];
+  }
+  applyDisplayJson(json);
+}
+
+void ensureMqttConnected() {
+  if (mqttClient.connected()) return;
+  if (mqttClient.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASS)) {
+    mqttClient.subscribe(MQTT_TOPIC_DISPLAY);
+    Serial.println("[CAM-01] MQTT conectado y suscrito a display/state.");
+  }
+}
+
 void setup() {
+  // Desactivar Brownout detector para evitar reseteos por picos de corriente
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
+  Serial.println("[CAM-01] Iniciando firmware completo...");
 
+  // Configuración de la cámara
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
@@ -83,70 +203,63 @@ void setup() {
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 16000000;
   config.frame_size = FRAMESIZE_UXGA;
-  config.pixel_format = PIXFORMAT_JPEG;  // for streaming
+  config.pixel_format = PIXFORMAT_JPEG;
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
   config.jpeg_quality = 12;
   config.fb_count = 1;
   config.jpeg_buffer_size = 0;
 
-  // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
-  //                      for larger pre-allocated frame buffer.
   if (config.pixel_format == PIXFORMAT_JPEG) {
     if (psramFound()) {
       config.jpeg_quality = 10;
       config.fb_count = 2;
       config.grab_mode = CAMERA_GRAB_LATEST;
     } else {
-      // Limit the frame size when PSRAM is not available
       config.frame_size = FRAMESIZE_SVGA;
       config.fb_location = CAMERA_FB_IN_DRAM;
     }
-  } else {
-    config.frame_size = FRAMESIZE_240X240;
-#if CONFIG_IDF_TARGET_ESP32S3
-    config.fb_count = 2;
-#endif
   }
 
-#if defined(CAMERA_MODEL_ESP_EYE)
-  pinMode(13, INPUT_PULLUP);
-  pinMode(14, INPUT_PULLUP);
-#endif
-
-  // camera init
+  // Inicializar cámara
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
+    Serial.printf("Camera init failed with error 0x%x\n", err);
     return;
   }
 
   sensor_t *s = esp_camera_sensor_get();
-  // initial sensors are flipped vertically and colors are a bit saturated
-  if (s->id.PID == OV3660_PID) {
-    s->set_vflip(s, 1);        // flip it back
-    s->set_brightness(s, 1);   // up the brightness just a bit
-    s->set_saturation(s, -2);  // lower the saturation
+  if (s != NULL) {
+    if (s->id.PID == OV3660_PID) {
+      s->set_vflip(s, 1);
+      s->set_brightness(s, 1);
+      s->set_saturation(s, -2);
+    }
+    s->set_framesize(s, FRAMESIZE_QVGA); // 320x240 óptimo para ML y Web
+    s->set_vflip(s, 1);
+    s->set_hmirror(s, 0);
   }
-  // drop down frame size for higher initial frame rate
-  if (config.pixel_format == PIXFORMAT_JPEG) {
-    s->set_framesize(s, FRAMESIZE_QVGA);
-  }
 
-#if defined(CAMERA_MODEL_M5STACK_WIDE) || defined(CAMERA_MODEL_M5STACK_ESP32CAM)
-  s->set_vflip(s, 1);
-  s->set_hmirror(s, 1);
-#endif
-
-#if defined(CAMERA_MODEL_ESP32S3_EYE)
-  s->set_vflip(s, 1);
-#endif
-
-// Setup LED FLash if LED pin is defined in camera_pins.h
 #if defined(LED_GPIO_NUM)
   setupLedFlash();
 #endif
 
+  // Inicialización de I2C/LCD después de la cámara para no interferir en el booteo
+  Wire.begin(LCD_I2C_SDA, LCD_I2C_SCL);
+  Wire.beginTransmission(LCD_I2C_ADDR);
+  if (Wire.endTransmission() == 0) {
+    lcdAvailable = true;
+    lcd.init();
+    lcd.backlight();
+    lcd.setCursor(0, 0);
+    lcd.print("Semaforo+ NORTE ");
+    lcd.setCursor(0, 1);
+    lcd.print("Conectando WiFi ");
+  } else {
+    Serial.println("[CAM-01] LCD no detectado en 0x27 (modo sin LCD).");
+  }
+
+  // Conexión WiFi
   WiFi.begin(ssid, password);
   WiFi.setSleep(false);
 
@@ -158,18 +271,31 @@ void setup() {
   Serial.println("");
   Serial.println("WiFi connected");
 
+  // Iniciar servidor web oficial local
   startCameraServer();
-
   Serial.print("Camera Ready! Use 'http://");
   Serial.print(WiFi.localIP());
   Serial.println("' to connect");
 
+  // Iniciar socket UDP
   udp.begin(UDP_PORT);
-  Serial.printf("[CAM-01] UDP Streaming listo hacia %s:%d\n", UDP_HOST, UDP_PORT);
+  Serial.printf("[CAM-01] Streaming UDP activo hacia %s:%d\n", UDP_HOST, UDP_PORT);
+
+  // Iniciar cliente MQTT
+  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+  mqttClient.setCallback(mqttDisplayCallback);
+  mqttClient.setBufferSize(512);
+
+  if (lcdAvailable) {
+    lcd.setCursor(0, 1);
+    lcd.print("Online: Conectad");
+  }
 }
 
 void loop() {
   unsigned long now = millis();
+
+  // 1. Streaming UDP continuo hacia la VPS / ML Vision (~15 FPS)
   if (WiFi.status() == WL_CONNECTED) {
     if (now - lastUdpFrameTime >= UDP_FRAME_INTERVAL_MS) {
       lastUdpFrameTime = now;
@@ -179,6 +305,17 @@ void loop() {
         esp_camera_fb_return(fb);
       }
     }
+
+    // 2. Mantener MQTT conectado para telemetría y tiempos de semáforo
+    if (!mqttClient.connected()) {
+      if (now - lastMqttReconnectAttempt >= 5000) {
+        lastMqttReconnectAttempt = now;
+        ensureMqttConnected();
+      }
+    } else {
+      mqttClient.loop();
+    }
   }
+
   delay(5);
 }

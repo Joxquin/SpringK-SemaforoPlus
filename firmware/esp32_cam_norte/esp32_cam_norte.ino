@@ -291,44 +291,18 @@ void setup() {
     lcd.setCursor(0, 1);
     lcd.print("Online: Conectad");
   }
-
-  // Tarea dedicada para streaming UDP (no bloqueada por reconexiones MQTT)
-  xTaskCreatePinnedToCore(
-    [](void *pvParameters) {
-      while (true) {
-        if (WiFi.status() == WL_CONNECTED) {
-          camera_fb_t *fb = esp_camera_fb_get();
-          if (fb) {
-            sendFrameUDP(fb);
-            esp_camera_fb_return(fb);
-          }
-        }
-        vTaskDelay(pdMS_TO_TICKS(5));
-      }
-    },
-    "udpStreamTask",
-    8192,
-    NULL,
-    1,
-    NULL,
-    1
-  );
 }
 
 void loop() {
-  unsigned long now = millis();
-
-  // Mantener MQTT conectado para telemetría y tiempos de semáforo
   if (WiFi.status() == WL_CONNECTED) {
-    if (!mqttClient.connected()) {
-      if (now - lastMqttReconnectAttempt >= 5000) {
-        lastMqttReconnectAttempt = now;
-        ensureMqttConnected();
-      }
-    } else {
+    camera_fb_t *fb = esp_camera_fb_get();
+    if (fb) {
+      sendFrameUDP(fb);
+      esp_camera_fb_return(fb);
+    }
+    if (mqttClient.connected()) {
       mqttClient.loop();
     }
   }
-
-  delay(20);
+  delay(5);
 }

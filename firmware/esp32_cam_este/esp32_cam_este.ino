@@ -21,6 +21,7 @@ const char* CAM_ID_STR = "CAM-02";
 
 WiFiUDP udp;
 uint16_t currentFrameId = 0;
+int currentJpegQuality = 90;
 
 void sendBufferUDP(const uint8_t *buf, size_t len) {
   if (WiFi.status() != WL_CONNECTED || buf == NULL || len == 0) return;
@@ -55,7 +56,7 @@ void sendFrameUDP(camera_fb_t *fb) {
   } else {
     uint8_t *jpg_buf = NULL;
     size_t jpg_len = 0;
-    if (frame2jpg(fb, 90, &jpg_buf, &jpg_len)) {
+    if (frame2jpg(fb, currentJpegQuality, &jpg_buf, &jpg_len)) {
       sendBufferUDP(jpg_buf, jpg_len);
       free(jpg_buf);
     }
@@ -561,6 +562,22 @@ body {
 
         </button>
 
+        <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <select class="button" onchange="toggleCheckbox(this.value)">
+                <option value="res_qqvga">QQVGA (160x120)</option>
+                <option value="res_240">240x240</option>
+                <option value="res_qvga" selected>QVGA (320x240)</option>
+                <option value="res_hvga">HVGA (480x320)</option>
+                <option value="res_vga">VGA (640x480)</option>
+            </select>
+            <select class="button" onchange="toggleCheckbox(this.value)">
+                <option value="qual_50">Calidad 50</option>
+                <option value="qual_65">Calidad 65</option>
+                <option value="qual_80">Calidad 80</option>
+                <option value="qual_90" selected>Calidad 90</option>
+                <option value="qual_95">Calidad 95</option>
+            </select>
+        </div>
 
     </div>
 
@@ -1595,6 +1612,23 @@ static esp_err_t cmd_handler(
 
     }
 
+
+    // ========================================================
+    // RESOLUTION & QUALITY
+    // ========================================================
+    if (!strncmp(variable, "res_", 4)) {
+        sensor_t *s = esp_camera_sensor_get();
+        if (s) {
+            if (!strcmp(variable, "res_qqvga")) s->set_framesize(s, FRAMESIZE_QQVGA);
+            else if (!strcmp(variable, "res_240")) s->set_framesize(s, FRAMESIZE_240X240);
+            else if (!strcmp(variable, "res_qvga")) s->set_framesize(s, FRAMESIZE_QVGA);
+            else if (!strcmp(variable, "res_hvga")) s->set_framesize(s, FRAMESIZE_HVGA);
+            else if (!strcmp(variable, "res_vga")) s->set_framesize(s, FRAMESIZE_VGA);
+        }
+    } else if (!strncmp(variable, "qual_", 5)) {
+        int q = atoi(variable + 5);
+        if (q >= 10 && q <= 100) currentJpegQuality = q;
+    }
 
     // ========================================================
     // ERROR

@@ -12,3 +12,9 @@ venv/
 .vscode/
 *.iml
 semaforoplus-iot-gateway-*/
+
+# Firmware build artifacts
+firmware/builds/
+*.elf
+*.bin
+*.map
